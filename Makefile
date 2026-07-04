@@ -12,7 +12,8 @@ build:
 setup: up
 	@echo "Waiting for MySQL..."
 	@sleep 8
-	docker compose exec -u root php chown -R www-data:www-data /var/www/backend/storage /var/www/backend/bootstrap/cache
+	docker compose exec -u root php chown -R www-data:www-data /var/www/backend/storage /var/www/backend/bootstrap/cache /var/www/storage/videos
+	docker compose exec -u root php mkdir -p /var/www/backend/storage/app/livewire-tmp
 	docker compose exec php php artisan key:generate --force
 	docker compose exec php php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider" --no-interaction
 	docker compose exec php php artisan filament:assets

@@ -23,9 +23,11 @@ class VideoResource extends Resource
             FileUpload::make('upload')
                 ->label('Video file')
                 ->acceptedFileTypes(['video/mp4', 'video/quicktime', 'video/webm'])
-                ->maxSize(2048000)
+                ->maxSize(512000)
                 ->disk('videos')
                 ->directory('raw')
+                ->previewable(false)
+                ->fetchFileInformation(false)
                 ->required()
                 ->dehydrated(false),
         ]);
