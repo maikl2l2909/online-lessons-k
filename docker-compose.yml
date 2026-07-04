@@ -1,0 +1,100 @@
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./backend:/var/www/backend
+      - ./frontend/dist:/var/www/frontend
+      - ./docker/nginx:/etc/nginx/conf.d
+      - video_storage:/var/www/storage/videos
+    depends_on:
+      - php
+    networks:
+      - courses
+
+  php:
+    build: ./docker/php
+    volumes:
+      - ./backend:/var/www/backend
+      - video_storage:/var/www/storage/videos
+    environment:
+      - DB_HOST=mysql
+      - DB_DATABASE=courses
+      - DB_USERNAME=courses
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+      - VIDEO_STORAGE_PATH=/var/www/storage/videos
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - courses
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8080/api/v1
+    networks:
+      - courses
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: courses
+      MYSQL_USER: courses
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - courses
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - courses
+
+  queue:
+    build: ./docker/php
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    volumes:
+      - ./backend:/var/www/backend
+      - video_storage:/var/www/storage/videos
+    environment:
+      - DB_HOST=mysql
+      - DB_DATABASE=courses
+      - DB_USERNAME=courses
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - courses
+
+volumes:
+  dbdata:
+  video_storage:
+
+networks:
+  courses:
+    driver: bridge
