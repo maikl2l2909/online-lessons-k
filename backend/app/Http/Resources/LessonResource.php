@@ -21,6 +21,10 @@ class LessonResource extends JsonResource
             'order' => $this->order,
             'is_free_preview' => $this->is_free_preview,
             'can_view' => $canView,
+            'duration_seconds' => $this->when(
+                $this->relationLoaded('video'),
+                fn () => $this->video?->duration_seconds
+            ),
             'video' => $this->when($canView && $this->relationLoaded('video'), function () {
                 return new VideoResource($this->video);
             }),
