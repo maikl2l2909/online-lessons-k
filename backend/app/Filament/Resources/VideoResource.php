@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\VideoStatus;
 use App\Filament\Resources\VideoResource\Pages;
-use App\Jobs\ProcessVideoJob;
 use App\Models\Video;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -21,15 +24,28 @@ class VideoResource extends Resource
     {
         return $schema->components([
             FileUpload::make('upload')
-                ->label('Video file')
+                ->label(fn (string $operation) => $operation === 'edit' ? 'Replace video file' : 'Video file')
+                ->helperText(fn (string $operation) => $operation === 'edit'
+                    ? 'Upload a new file to replace the current video. It will be re-processed.'
+                    : null)
                 ->acceptedFileTypes(['video/mp4', 'video/quicktime', 'video/webm'])
                 ->maxSize(512000)
                 ->disk('videos')
                 ->directory('raw')
                 ->previewable(false)
                 ->fetchFileInformation(false)
-                ->required()
+                ->required(fn (string $operation) => $operation === 'create')
                 ->dehydrated(false),
+            TextInput::make('original_filename')
+                ->label('File name')
+                ->maxLength(255)
+                ->visibleOn('edit'),
+            Select::make('status')
+                ->options(collect(VideoStatus::cases())
+                    ->mapWithKeys(fn (VideoStatus $status) => [$status->value => ucfirst($status->value)])
+                    ->all())
+                ->required()
+                ->visibleOn('edit'),
         ]);
     }
 
@@ -42,7 +58,10 @@ class VideoResource extends Resource
                 TextColumn::make('duration_seconds')->label('Duration (s)'),
                 TextColumn::make('created_at')->dateTime(),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->recordActions([
+                EditAction::make(),
+            ]);
     }
 
     public static function getPages(): array
@@ -50,6 +69,7 @@ class VideoResource extends Resource
         return [
             'index' => Pages\ListVideos::route('/'),
             'create' => Pages\CreateVideo::route('/create'),
+            'edit' => Pages\EditVideo::route('/{record}/edit'),
         ];
     }
 }

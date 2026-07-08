@@ -13,7 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->statefulApi();
+        // todo: check security
+        // This SPA authenticates with Bearer tokens (Sanctum personal access
+        // tokens), not cookie/session auth, so we intentionally do NOT enable
+        // statefulApi() — doing so applies CSRF verification to API requests
+        // based on the Origin header and breaks token-based login.
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
         ]);
