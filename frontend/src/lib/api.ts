@@ -40,6 +40,7 @@ export interface Lesson {
   order: number;
   is_free_preview: boolean;
   can_view: boolean;
+  duration_seconds?: number | null;
   video?: Video;
   progress?: { completed: boolean; watched_seconds: number } | null;
 }
