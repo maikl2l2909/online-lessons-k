@@ -23,7 +23,7 @@ class VideoResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            FileUpload::make('upload')
+            FileUpload::make('storage_path')
                 ->label(fn (string $operation) => $operation === 'edit' ? 'Replace video file' : 'Video file')
                 ->helperText(fn (string $operation) => $operation === 'edit'
                     ? 'Upload a new file to replace the current video. It will be re-processed.'
@@ -34,8 +34,7 @@ class VideoResource extends Resource
                 ->directory('raw')
                 ->previewable(false)
                 ->fetchFileInformation(false)
-                ->required(fn (string $operation) => $operation === 'create')
-                ->dehydrated(false),
+                ->required(fn (string $operation) => $operation === 'create'),
             TextInput::make('original_filename')
                 ->label('File name')
                 ->maxLength(255)

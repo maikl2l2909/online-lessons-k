@@ -10,6 +10,12 @@ interface VideoPlayerProps {
 export function VideoPlayer({ src, poster, onProgress }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const onProgressRef = useRef(onProgress);
+
+  useEffect(() => {
+    onProgressRef.current = onProgress;
+  }, [onProgress]);
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src) return;
@@ -24,8 +30,15 @@ export function VideoPlayer({ src, poster, onProgress }: VideoPlayerProps) {
       video.src = src;
     }
 
+    let lastReportedSecond = -1;
+
     const handleTimeUpdate = () => {
-      onProgress?.(Math.floor(video.currentTime));
+      const currentSecond = Math.floor(video.currentTime);
+      // Report progress every 5 seconds
+      if (currentSecond !== lastReportedSecond && currentSecond % 5 === 0) {
+        lastReportedSecond = currentSecond;
+        onProgressRef.current?.(currentSecond);
+      }
     };
 
     video.addEventListener('timeupdate', handleTimeUpdate);
@@ -34,7 +47,7 @@ export function VideoPlayer({ src, poster, onProgress }: VideoPlayerProps) {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       hls?.destroy();
     };
-  }, [src, onProgress]);
+  }, [src]);
 
   return (
     <video

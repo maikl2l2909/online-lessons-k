@@ -9,11 +9,9 @@ class SignedStreamUrlService
 {
     public function generateStreamUrl(Video $video): string
     {
-        return URL::temporarySignedRoute(
-            'videos.stream',
-            now()->addHours(2),
-            ['video' => $video->id]
-        );
+        $expires = now()->addHours(2)->timestamp;
+        $hash = hash_hmac('sha256', $video->id . $expires, config('app.key'));
+        return url("/api/v1/videos/{$video->id}/stream/playlist.m3u8?expires={$expires}&signature={$hash}");
     }
 
     public function generateThumbnailUrl(Video $video): string

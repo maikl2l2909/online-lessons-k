@@ -14,14 +14,11 @@ class CreateVideo extends CreateRecord
 
     protected function handleRecordCreation(array $data): Video
     {
-        $uploadPath = $this->form->getState()['upload'] ?? null;
+        $data['original_filename'] = basename((string) ($data['storage_path'] ?? ''));
+        $data['status'] = 'uploaded';
+        $data['user_id'] = auth()->id();
 
-        $video = Video::create([
-            'original_filename' => basename((string) $uploadPath),
-            'storage_path' => $uploadPath,
-            'status' => 'uploaded',
-            'user_id' => auth()->id(),
-        ]);
+        $video = Video::create($data);
 
         ProcessVideoJob::dispatch($video);
 

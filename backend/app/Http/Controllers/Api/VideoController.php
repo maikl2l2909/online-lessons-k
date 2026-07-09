@@ -12,7 +12,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class VideoController extends Controller
 {
@@ -50,31 +49,50 @@ class VideoController extends Controller
         return new VideoResource($video);
     }
 
-    public function stream(Request $request, Video $video): JsonResponse|StreamedResponse
+    public function stream(Request $request, Video $video, string $file = 'playlist.m3u8'): mixed
     {
-        if (! $request->hasValidSignature()) {
+        $expires = $request->query('expires');
+        $signature = $request->query('signature');
+
+        if (! $expires || ! $signature || $expires < now()->timestamp) {
             return response()->json(['message' => 'Invalid or expired link.'], 403);
         }
 
-        $lesson = $video->lesson;
-        if ($lesson) {
-            $this->authorize('view', $lesson);
-        } elseif (! $request->user()?->isAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
+        $expectedHash = hash_hmac('sha256', $video->id . $expires, config('app.key'));
+        if (! hash_equals($expectedHash, $signature)) {
+            return response()->json(['message' => 'Invalid signature.'], 403);
         }
 
         if (! $video->isReady() || ! $video->hls_path) {
             return response()->json(['message' => 'Video not ready.'], 422);
         }
 
-        $playlistPath = Storage::disk('videos')->path($video->hls_path);
+        $baseDir = dirname($video->hls_path);
 
-        if (! file_exists($playlistPath)) {
+        if (str_contains($file, '..') || str_contains($file, '/')) {
+            return response()->json(['message' => 'Invalid file.'], 400);
+        }
+
+        $filePath = Storage::disk('videos')->path($baseDir . '/' . $file);
+
+        if (! file_exists($filePath)) {
             return response()->json(['message' => 'Video file not found.'], 404);
         }
 
-        return response()->file($playlistPath, [
-            'Content-Type' => 'application/vnd.apple.mpegurl',
+        if (str_ends_with($file, '.m3u8')) {
+            $content = file_get_contents($filePath);
+            $queryString = "expires={$expires}&signature={$signature}";
+            // Append query string to all segment lines, handling potential \r
+            $content = preg_replace('/^(.*\.ts)(\r?)$/m', "$1?{$queryString}$2", $content);
+
+            return response($content, 200, [
+                'Content-Type' => 'application/vnd.apple.mpegurl',
+                'Cache-Control' => 'no-cache',
+            ]);
+        }
+
+        return response()->file($filePath, [
+            'Content-Type' => 'video/MP2T',
             'Cache-Control' => 'no-cache',
         ]);
     }

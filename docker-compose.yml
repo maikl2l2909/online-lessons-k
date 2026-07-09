@@ -15,6 +15,8 @@ services:
 
   php:
     build: ./docker/php
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./backend:/var/www/backend
       - video_storage:/var/www/storage/videos

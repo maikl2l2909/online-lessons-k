@@ -10,7 +10,9 @@ use App\Models\Lesson;
 use App\Models\Section;
 use App\Models\User;
 use App\Models\Video;
+use Database\Seeders\Support\DemoVideoProvisioner;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 
 class DatabaseSeeder extends Seeder
 {
@@ -80,6 +82,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         $sectionOrder = 0;
+        $videos = new Collection;
 
         foreach ($curriculum as $sectionTitle => $lessons) {
             $section = Section::create([
@@ -92,9 +95,11 @@ class DatabaseSeeder extends Seeder
                 $video = Video::create([
                     'original_filename' => str($title)->slug().'.mp4',
                     'duration_seconds' => $duration,
-                    'status' => VideoStatus::Ready,
+                    'status' => VideoStatus::Uploaded,
                     'user_id' => $admin->id,
                 ]);
+
+                $videos->push($video);
 
                 Lesson::create([
                     'section_id' => $section->id,
@@ -106,5 +111,9 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        $this->command?->info('Provisioning playable demo videos (this may take a moment)...');
+        (new DemoVideoProvisioner)->provision($videos);
+        $this->command?->info("Provisioned {$videos->count()} demo videos.");
     }
 }

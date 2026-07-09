@@ -21,12 +21,10 @@ class EditVideo extends EditRecord
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        $uploadPath = $this->form->getState()['upload'] ?? null;
-        $isReplacement = $uploadPath && $uploadPath !== $record->storage_path;
+        $isReplacement = isset($data['storage_path']) && $data['storage_path'] !== $record->storage_path;
 
         if ($isReplacement) {
-            $data['storage_path'] = $uploadPath;
-            $data['original_filename'] = basename((string) $uploadPath);
+            $data['original_filename'] = basename((string) $data['storage_path']);
             $data['status'] = 'uploaded';
         }
 

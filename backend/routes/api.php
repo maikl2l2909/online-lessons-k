@@ -19,7 +19,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 
     // Signed video routes (no auth middleware — signature validates access)
-    Route::get('/videos/{video}/stream', [VideoController::class, 'stream'])
+    Route::get('/videos/{video}/stream/{file?}', [VideoController::class, 'stream'])
+        ->where('file', '.*')
         ->name('videos.stream');
     Route::get('/videos/{video}/thumbnail', [VideoController::class, 'thumbnail'])
         ->name('videos.thumbnail');
