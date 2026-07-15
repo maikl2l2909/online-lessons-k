@@ -29,7 +29,7 @@ class CheckoutController extends Controller
         $order = Order::firstOrCreate(
             ['user_id' => $request->user()->id, 'course_id' => $course->id],
             [
-                'amount_cents' => $course->price_cents,
+                'amount_cents' => (int) round($course->price * 100),
                 'currency' => $course->currency,
                 'status' => 'pending',
             ]
@@ -44,7 +44,7 @@ class CheckoutController extends Controller
                         'name' => $course->title,
                         'description' => Str($course->description)->limit(200)->toString(),
                     ],
-                    'unit_amount' => $course->price_cents,
+                    'unit_amount' => (int) round($course->price * 100),
                 ],
                 'quantity' => 1,
             ]],

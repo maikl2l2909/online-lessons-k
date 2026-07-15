@@ -15,7 +15,7 @@ class Course extends Model
         'title',
         'slug',
         'description',
-        'price_cents',
+        'price',
         'currency',
         'thumbnail',
         'status',
@@ -26,7 +26,7 @@ class Course extends Model
     {
         return [
             'status' => CourseStatus::class,
-            'price_cents' => 'integer',
+            'price' => 'decimal:2',
         ];
     }
 
@@ -61,7 +61,7 @@ class Course extends Model
 
     public function getFormattedPriceAttribute(): string
     {
-        return '$'.number_format($this->price_cents / 100, 2);
+        return '$'.number_format($this->price, 2);
     }
 
     public function isPublished(): bool

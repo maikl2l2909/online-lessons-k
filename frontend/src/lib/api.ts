@@ -57,7 +57,7 @@ export interface Course {
   title: string;
   slug: string;
   description: string | null;
-  price_cents: number;
+  price: number;
   formatted_price: string;
   currency: string;
   thumbnail: string | null;

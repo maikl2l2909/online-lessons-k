@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('title');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->unsignedInteger('price_cents')->default(0);
+            $table->decimal('price', 10, 2)->default(0);
             $table->string('currency', 3)->default('usd');
             $table->string('thumbnail')->nullable();
             $table->string('status')->default('draft');

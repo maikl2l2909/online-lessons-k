@@ -25,8 +25,8 @@ class CourseResource extends Resource
         return $schema->components([
             TextInput::make('title')->required()->maxLength(255),
             Textarea::make('description')->rows(4),
-            TextInput::make('price_cents')
-                ->label('Price (cents)')
+            TextInput::make('price')
+                ->label('Price')
                 ->numeric()
                 ->required()
                 ->default(0),
@@ -54,7 +54,7 @@ class CourseResource extends Resource
             ->columns([
                 TextColumn::make('title')->searchable()->sortable(),
                 TextColumn::make('status')->badge(),
-                TextColumn::make('price_cents')->label('Price')->money('usd', divideBy: 100),
+                TextColumn::make('price')->label('Price')->money('usd'),
                 TextColumn::make('created_at')->dateTime()->sortable(),
             ])
             ->defaultSort('created_at', 'desc');

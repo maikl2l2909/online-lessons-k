@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
                 .'Start from a blank project and finish with a production-ready app — covering routing, Eloquent, '
                 .'authentication, testing, queues, and deployment along the way. Every episode is bite-sized and '
                 .'hands-on, so you can follow along at your own pace.',
-            'price_cents' => 4999,
+            'price' => 49.99,
             'currency' => 'usd',
             'status' => CourseStatus::Published,
             'user_id' => $admin->id,
